@@ -2,25 +2,24 @@
 
 <head>
     <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.min.css">
-    <link rel="stylesheet" href="lib/jquery/css/jquery-ui.css">
     <script src="lib/jquery/js/jquery-3.4.1.js"></script>
-    <script src="lib/jquery/js/jquery-ui.js"></script>
     <script src="lib/bootstrap/js/bootstrap.min.js"></script>
     <script src="https://sis-t.redsys.es:25443/sis/NC/sandbox/redsysV2.js"></script>
 
+    <!-- This form is just an example -->
     <style>
-        #pago-form {
+        #payment-form {
             background-color: lightgrey;
             padding: 15px;
             width: 550px;
         }
 
-        #pago-form label {
+        #payment-form label {
             text-align: center;
         }
 
-        #pago-form select,
-        #pago-form input {
+        #payment-form select,
+        #payment-form input {
             width: 100%;
             padding: 5px;
             border: solid grey 1px;
@@ -50,13 +49,17 @@
 </head>
 
 <?php
-$merchantId = "999008881";
-$terminal = "1";
-$orderId = time();
+    // merchantId and terminal have to be obtained from your system and not directly written into code, this is just an example coded to be functional out of the box
+    $merchantId = "999008881";
+    $terminal = "1";
+
+    // orderId has to be obttained according to the merchant's criteria, this is just an example
+    $orderId = time();
 ?>
 
 <body class="flex-center-column" style="height: 100%;">
-    <form id="pago-form" action="paymentBackend.php" class="flex-center-column" name="datos" method='POST' enctype='application/x-www-form-urlencoded'>
+    <!-- This form is just an example -->
+    <form id="payment-form" action="paymentBackend.php" class="flex-center-column" name="datos" method='POST' enctype='application/x-www-form-urlencoded'>
         <input type="hidden" id="idOper" name="idOper"></input>
         <input type="hidden" id="errorCode" name="errorCode"></input>
         <input type="hidden" id="merchantId" name="merchantId" value="<?php echo ($merchantId) ?>"></input>
@@ -67,7 +70,6 @@ $orderId = time();
                 <label for="merchantOrderId">Order ID</label>
                 <input type="text" id="merchantOrderId" name="merchantOrderId" class="disabled" readonly></input>
             </div>
-            <!-- La clave privada, el ID del comercio y la terminal no se debe obtener desde un formulario, estos campo sirve únicamente para poder hacer pruebas con este ejemplo -->
             <div class="col-6">
                 <label for="amount">Amount</label>
                 <input type="text" id="amount" name="amount" value="5,95"></input>
@@ -90,8 +92,8 @@ $orderId = time();
         var token = "-1";
 
         function validate() {
-            //Insertar validaciones…
-            alert("Esto son validaciones propias");
+            // Validations!! To do by merchant
+            alert("Validations by merchant!!");
             return true;
         }
 
@@ -99,7 +101,7 @@ $orderId = time();
             storeIdOper(event, "idOper", "errorCode", validate);
             token = $('#idOper').val();
             if (submitted == false && token != '' && token != '-1') {
-                $('#pago-form').submit();
+                $('#payment-form').submit();
                 submitted = true;
             }
         });
@@ -111,7 +113,6 @@ $orderId = time();
         $('#merchantOrderId').val(merchantOrderId);
 
         getInSiteForm('card-form', '', '', '', '', 'Realizar pago', merchantId, merchantTerminal, merchantOrderId, 'ES');
-        
     </script>
 </body>
 
