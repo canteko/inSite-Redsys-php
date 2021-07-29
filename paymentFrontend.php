@@ -30,6 +30,9 @@ $orderId = time();
             background-color: lightgrey;
             padding: 15px;
             width: 100%;
+            margin: 0;
+            border-bottom-right-radius: 20px;
+            border-bottom-left-radius: 20px;
         }
 
         #payment-form label {
@@ -46,6 +49,9 @@ $orderId = time();
 
         .form-wrapper {
             width: 550px;
+            box-shadow: 0px 14px 30px #c7c7c7;
+            border-radius: 20px;
+            margin-bottom: 20px;
         }
 
         #card-form {
@@ -80,7 +86,8 @@ $orderId = time();
             border-radius: 32px;
             height: 195px;
             width: 320px;
-            border: 7px solid black;
+            border: 3px solid black;
+            box-shadow: 0px 10px 30px #a5a5a5;
         }
 
         .example-card input {
@@ -101,6 +108,8 @@ $orderId = time();
         .header {
             background-color: #b5b5b5;
             padding: 4px;
+            border-top-right-radius: 20px;
+            border-top-left-radius: 20px;
         }
     </style>
 </head>
