@@ -5,6 +5,9 @@ include_once 'ApiRedsysREST/initRedsysApi.php';
 function main($request, $privateKey)
 {
     // Settings variables received on request
+    // Environment
+    $environment = (!empty($request['env']) ? $request['env'] : RESTConstants::$ENV_SANDBOX);
+
     // idOper
     $idOper = (!empty($request['idOper']) ? $request['idOper'] : "");
 
@@ -21,22 +24,27 @@ function main($request, $privateKey)
     // Value of the purchase
     // This value has to be VALUE*100, if we want to pay 1.99€, we have to send 199, so we multiply original amount by 100
     $amountRaw = str_replace(',', '.', (!empty($request['amount']) ? $request['amount'] : "1.99"));
-    $amount = strval(intval($amountRaw) * 100);
+    $amount = strval(floatval($amountRaw) * 100);
 
     // Transaction ID
     $order = (!empty($request['merchantOrderId']) ? $request['merchantOrderId'] : time());
 
-    // Challenge Response URL
-    $challengeResponseUrl = "http://localhost:8080/EjemploPHP/paymentBackend.php?"
-        . "&merchantOrderId=" . $order
-        . "&idOper=" . $idOper
-        . "&currency=" . $currency
-        . "&merchantId=" . $merchant
-        . "&terminal=" . $terminal
-        . "&amount=" . $amount;
+    // Getting host URL
+    $explodeUrl = explode('/', $_SERVER["HTTP_REFERER"]);
+    $host = str_replace($explodeUrl[count($explodeUrl) - 1], '', $_SERVER["HTTP_REFERER"]);
 
-    // Sandbox
-    $environment = RESTConstants::$ENV_SANDBOX;
+    // Challenge Response URL
+    // These variables should be stored on your system, not to be obtained from an url request, it's just a code to be functional out of the box
+    $challengeResponseUrl = "$host" . "paymentBackend.php?"
+        . "&merchantOrderId=$order"
+        . "&idOper=$idOper"
+        . "&currency=$currency"
+        . "&merchantId=$merchant"
+        . "&terminal=$terminal"
+        . "&env=$environment"
+        . "&amount=$amount";
+
+    // Variables needed
     $protocolVersion = $threeDSServerTransID = $threeDSMethodURL = "";
 
     // Initial operation
@@ -53,6 +61,27 @@ function main($request, $privateKey)
     $threeDSServerTransID = $ioResponse->getThreeDSServerTransID();
     // 3DS Endpoint
     $threeDSMethodURL = $ioResponse->getThreeDSMethodURL();
+    // ThreeDSCompInd, hardcoded value to make it work out of the box, check line 71
+    $threeDSCompInd = 'Y';
+
+    // Check if we have to do 3DSMETHOD
+    if(empty($threeDSMethodURL)){
+        $threeDSCompInd = 'N'; 
+    } else {
+        // TODO We would need to do 3DSMETHOD if URL is not empty
+    }
+
+    // BrowserData
+    $browserData = array();
+    if($protocolVersion != RESTConstants::$REQUEST_MERCHANT_EMV3DS_PROTOCOLVERSION_102) {
+        $browserData['javaEnabled'] = (!empty($request['javaEnabled']) ? $request['javaEnabled'] : "false");
+        $browserData['javascriptEnabled'] = (!empty($request['javascriptEnabled']) ? $request['javascriptEnabled'] : "false");
+        $browserData['browserLanguage'] = (!empty($request['browserLanguage']) ? $request['browserLanguage'] : "");
+        $browserData['browserColorDepth'] = (!empty($request['browserColorDepth']) ? $request['browserColorDepth'] : "");
+        $browserData['browserScreenHeight'] = (!empty($request['browserScreenHeight']) ? $request['browserScreenHeight'] : "");
+        $browserData['browserScreenWidth'] = (!empty($request['browserScreenWidth']) ? $request['browserScreenWidth'] : "");
+        $browserData['browserTZ'] = (!empty($request['browserTZ']) ? $request['browserTZ'] : "");
+    }
 
     $toResponse = null;
     // If response is AUT, we need authentication,
@@ -60,7 +89,7 @@ function main($request, $privateKey)
     // If response is KO, something went wrong
     // In order to pay securely, we are going to use authentication despite of response (If it is not a KO)
     if ($ioResponse->getResult() == RESTConstants::$RESP_LITERAL_AUT || $ioResponse->getResult() == RESTConstants::$RESP_LITERAL_OK) {
-        $toResponse = authenticationOperation($privateKey, $order, $amount, $currency, $merchant, $terminal, $transactionType, $idOper, $environment, $protocolVersion, $threeDSServerTransID, $challengeResponseUrl);
+        $toResponse = authenticationOperation($privateKey, $order, $amount, $currency, $merchant, $terminal, $transactionType, $idOper, $environment, $protocolVersion, $threeDSCompInd, $browserData, $threeDSServerTransID, $challengeResponseUrl);
     }
 
     // Challenge variables
@@ -116,7 +145,7 @@ function initialOperation($privateKey, $order, $amount, $currency, $merchant, $t
 /**
  * Method for a authentication operation request. This request depend on the initial request parameter "protocolVersion"
  */
-function authenticationOperation($privateKey, $order, $amount, $currency, $merchant, $terminal, $transactionType, $idOper, $environment, $protocolVersion, $threeDSServerTransID = "", $challengeResponseUrl = "")
+function authenticationOperation($privateKey, $order, $amount, $currency, $merchant, $terminal, $transactionType, $idOper, $environment, $protocolVersion, $threeDSCompInd = "N", $browserData = null, $threeDSServerTransID = "", $challengeResponseUrl = "")
 {
     $operationRequest = new RestOperationMessage();
 
@@ -133,18 +162,25 @@ function authenticationOperation($privateKey, $order, $amount, $currency, $merch
         // Method to make an authenticationRequest with protocolVersion 1.0.2
         $operationRequest->setEMV3DSParamsV1();
     } else {
+        $browserJavaEnable =  $browserJavaScriptEnabled =  $browserLanguage =  $browserColorDepth =  $browserScreenHeight =  $browserScreenWidth =  $browserTZ = "";
+
         // Method to make an authenticationRequest with protocolVersion 2.X.0
-        $browserAcceptHeader = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8,application/json";
-        $browserUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36";
-        $browserJavaEnable = "false";
-        $browserJavaScriptEnabled = "false";
-        $browserLanguage = "ES-es";
-        $browserColorDepth = "24";
-        $browserScreenHeight = "1250";
-        $browserScreenWidth = "1320";
-        $browserTZ = "52";
+        $browserAcceptHeader = $_SERVER["HTTP_ACCEPT"];
+        $browserUserAgent = $_SERVER["HTTP_USER_AGENT"];
+
+        // Browser data obtained with JS
+        if(!empty($browserData)) {
+            $browserJavaEnable = $browserData['javaEnabled'];
+            $browserJavaScriptEnabled = $browserData['javascriptEnabled'];
+            $browserLanguage = $browserData['browserLanguage'];
+            $browserColorDepth = $browserData['browserColorDepth'];
+            $browserScreenHeight = $browserData['browserScreenHeight'];
+            $browserScreenWidth = $browserData['browserScreenWidth'];
+            $browserTZ = $browserData['browserTZ'];
+        }
+
+        // Notification URL
         $notificationURL = "$challengeResponseUrl&type=challengeResponse&protocolVersion=$protocolVersion";
-        $threeDSCompInd = "Y";
 
         // Method used to add the return parameters to the authentication request for protocolVersion 2.X.0
         $operationRequest->setEMV3DSParamsV2($protocolVersion, $browserAcceptHeader, $browserUserAgent, $browserJavaEnable, $browserJavaScriptEnabled, $browserLanguage, $browserColorDepth, $browserScreenHeight, $browserScreenWidth, $browserTZ, $threeDSServerTransID, $notificationURL, $threeDSCompInd);
@@ -208,6 +244,9 @@ function challengeResponse($request, $privateKey)
     // Transaction type is authorization
     $transactionType = RESTConstants::$AUTHORIZATION;
 
+    // Environment
+    $environment = (!empty($request['env']) ? $request['env'] : RESTConstants::$ENV_SANDBOX);
+
     // ProtocolVersion
     $protocolVersion = (!empty($request['protocolVersion']) ? $request['protocolVersion'] : "1.0.2");
 
@@ -222,7 +261,7 @@ function challengeResponse($request, $privateKey)
     $challengeRequest->setOrder((!empty($request['merchantOrderId']) ? $request['merchantOrderId'] : ""));
     $challengeRequest->setTransactionType($transactionType);
 
-    //Card Data information
+    // inSite ID Oper information
     $challengeRequest->setOperID($idOper);
 
     // Receiving parameters we need to save send depending on the protocolVersion
@@ -245,7 +284,7 @@ function challengeResponse($request, $privateKey)
     $response = null;
     try {
         // Service setting (Signature and Environment)
-        $service = new RestAuthenticationRequestService($privateKey, RESTConstants::$ENV_SANDBOX);
+        $service = new RestAuthenticationRequestService($privateKey, $environment);
         // Send the operation and catch the response
         $response = $service->sendOperation($challengeRequest);
         // Response analysis
@@ -261,7 +300,7 @@ function challengeResponse($request, $privateKey)
 // Type of flow to follow
 $type = (empty($_REQUEST['type']) ? "init" : $_REQUEST['type']);
 
-// privateKey have to be obtained from your system and not directly written into code, this is just an example coded to be functional out of the box
+// privateKey has to be obtained from your system and not directly written into code, this is just an example coded to be functional out of the box
 $privateKey = "sq7HjrUOBfKmC576ILgskD5srU870gJ7";
 
 // Check request type
@@ -275,8 +314,10 @@ if($type == "init") {
 if(!empty($response)) {
     if($response->getResult() == RESTConstants::$RESP_LITERAL_OK) {
         echo("<h1 style='color: green'>Payment has been successfully submitted!</h1>");
+        echo("<a href='paymentFrontend.php' target='_parent'>Go Back!</a>");
     } else if($response->getResult() == RESTConstants::$RESP_LITERAL_AUT) {
         echo("<h1 style='color: orange'>Authentication needed!</h1>");
+        echo("<a href='paymentFrontend.php' target='_parent'>Go Back!</a>");
     } else if($response->getResult() == RESTConstants::$RESP_LITERAL_KO) {
         echo("<h1 style='color: red'>An error has occurred!</h1>");
     }
