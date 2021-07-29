@@ -53,13 +53,13 @@
     $merchantId = "999008881";
     $terminal = "1";
 
-    // orderId has to be obttained according to the merchant's criteria, this is just an example
+    // orderId has to be obtained according to the merchant's criteria, this is just an example
     $orderId = time();
 ?>
 
 <body class="flex-center-column" style="height: 100%;">
     <!-- This form is just an example -->
-    <form id="payment-form" action="paymentBackend.php" class="flex-center-column" name="datos" method='POST' enctype='application/x-www-form-urlencoded'>
+    <form id="payment-form" action="paymentBackend.php?prueba=123" class="flex-center-column" name="datos" method='POST' enctype='application/x-www-form-urlencoded'>
         <input type="hidden" id="idOper" name="idOper"></input>
         <input type="hidden" id="errorCode" name="errorCode"></input>
         <input type="hidden" id="merchantId" name="merchantId" value="<?php echo ($merchantId) ?>"></input>

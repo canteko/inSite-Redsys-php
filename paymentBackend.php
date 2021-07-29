@@ -4,29 +4,26 @@ include_once 'ApiRedsysREST/initRedsysApi.php';
 
 function main($request, $privateKey)
 {
-    // Recogemos las variables
+    // Settings variables received on request
     // idOper
     $idOper = (!empty($request['idOper']) ? $request['idOper'] : "");
 
-    // Esta es la ID de la moneda que se va a usar en la transacción, 978 es EUR en el estándar ISO 4217​
+    // Currency ID (ISO 4217)​
     $currency = (!empty($request['currency']) ? $request['currency'] : "");
 
-    // ID del comercio, terminal del comercio y clave privada, esto tiene que ser obtenido de la base de datos
-    // de la tienda o bien de algún archivo de configuración.
-    // MUY IMPORTANTE guardar la privateKey en un lugar seguro
+    // merchantId and terminal have to be obtained from your system and not directly written into code no received from post, this is just an example coded to be functional out of the box
     $merchant = (!empty($request['merchantId']) ? $request['merchantId'] : "999008881");
     $terminal = (!empty($request['terminal']) ? $request['terminal'] : "1");
 
-    // EL tipo de transacción es autorización
+    // Transaction type is authorization
     $transactionType = RESTConstants::$AUTHORIZATION;
 
-    // Cantidad de la compra y datos de la tarjeta, estos datos se obtienen del cliente a través de un formulario
-    // y del cálculo del valor de la operación
-    // El valor de la compra está en VALOR*100, por lo que, en este ejemplo, el valor de la compra es 1,99€
+    // Value of the purchase
+    // This value has to be VALUE*100, if we want to pay 1.99€, we have to send 199, so we multiply original amount by 100
     $amountRaw = str_replace(',', '.', (!empty($request['amount']) ? $request['amount'] : "1.99"));
     $amount = strval(intval($amountRaw) * 100);
 
-    // ID de la transacción
+    // Transaction ID
     $order = (!empty($request['merchantOrderId']) ? $request['merchantOrderId'] : time());
 
     // Challenge Response URL
@@ -38,11 +35,11 @@ function main($request, $privateKey)
         . "&terminal=" . $terminal
         . "&amount=" . $amount;
 
-    // TEST
+    // Sandbox
     $environment = RESTConstants::$ENV_SANDBOX;
     $protocolVersion = $threeDSServerTransID = $threeDSMethodURL = "";
 
-    // Operación inicial
+    // Initial operation
     $ioResponse = initialOperation($privateKey, $order, $amount, $currency, $merchant, $terminal, $transactionType, $idOper, $environment);
 
     // Check response
@@ -117,7 +114,7 @@ function initialOperation($privateKey, $order, $amount, $currency, $merchant, $t
 }
 
 /**
- * Method to authenticate an operation request. This request depend on the initial request parameter "protocolVersion"
+ * Method for a authentication operation request. This request depend on the initial request parameter "protocolVersion"
  */
 function authenticationOperation($privateKey, $order, $amount, $currency, $merchant, $terminal, $transactionType, $idOper, $environment, $protocolVersion, $threeDSServerTransID = "", $challengeResponseUrl = "")
 {
@@ -133,10 +130,10 @@ function authenticationOperation($privateKey, $order, $amount, $currency, $merch
     $operationRequest->setOperID($idOper);
 
     if ($protocolVersion == RESTConstants::$REQUEST_MERCHANT_EMV3DS_PROTOCOLVERSION_102) {
-        //Method to make a authenticationRequest with protocolVersion 1.0.2
+        // Method to make an authenticationRequest with protocolVersion 1.0.2
         $operationRequest->setEMV3DSParamsV1();
     } else {
-        //Method to make a authenticationRequest with protocolVersion 2.X.0
+        // Method to make an authenticationRequest with protocolVersion 2.X.0
         $browserAcceptHeader = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8,application/json";
         $browserUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36";
         $browserJavaEnable = "false";
@@ -149,14 +146,14 @@ function authenticationOperation($privateKey, $order, $amount, $currency, $merch
         $notificationURL = "$challengeResponseUrl&type=challengeResponse&protocolVersion=$protocolVersion";
         $threeDSCompInd = "Y";
 
-        //Method that can be use to add the return parameters to the authentication request for protocolVersion 2.X.0
+        // Method used to add the return parameters to the authentication request for protocolVersion 2.X.0
         $operationRequest->setEMV3DSParamsV2($protocolVersion, $browserAcceptHeader, $browserUserAgent, $browserJavaEnable, $browserJavaScriptEnabled, $browserLanguage, $browserColorDepth, $browserScreenHeight, $browserScreenWidth, $browserTZ, $threeDSServerTransID, $notificationURL, $threeDSCompInd);
     }
 
     try {
         // Service setting (Signature and Environment)
         $service = new RestOperationService($privateKey, $environment);
-        //Send the operation and catch the response
+        // Send the operation and catch the response
         $response = $service->sendOperation($operationRequest);
         // Response analysis
     } catch (Exception $e) {
@@ -208,7 +205,7 @@ function challengeResponse($request, $privateKey)
     // Operation mandatory data
     $challengeRequest = new RestAuthenticationRequestMessage();
 
-    // EL tipo de transacción es autorización
+    // Transaction type is authorization
     $transactionType = RESTConstants::$AUTHORIZATION;
 
     // ProtocolVersion
@@ -249,7 +246,7 @@ function challengeResponse($request, $privateKey)
     try {
         // Service setting (Signature and Environment)
         $service = new RestAuthenticationRequestService($privateKey, RESTConstants::$ENV_SANDBOX);
-        //Send the operation and catch the response
+        // Send the operation and catch the response
         $response = $service->sendOperation($challengeRequest);
         // Response analysis
     } catch (Exception $e) {
@@ -261,18 +258,20 @@ function challengeResponse($request, $privateKey)
     return $response;
 }
 
-$inputPostData = json_decode(file_get_contents("php://input"), true);
-$inputPostData = (empty($inputPostData) ? array() : $inputPostData);
-$postData = (!empty($_POST) ? $_POST : $inputPostData);
-$request = array_merge($postData, $_GET);
-$type = (empty($request['type']) ? "init" : $request['type']);
+// Type of flow to follow
+$type = (empty($_REQUEST['type']) ? "init" : $_REQUEST['type']);
+
+// privateKey have to be obtained from your system and not directly written into code, this is just an example coded to be functional out of the box
 $privateKey = "sq7HjrUOBfKmC576ILgskD5srU870gJ7";
+
+// Check request type
 if($type == "init") {
-    $response = main($request, $privateKey);
+    $response = main($_REQUEST, $privateKey);
 } else if ($type == "challengeResponse"){
-    $response = challengeResponse($request, $privateKey);
+    $response = challengeResponse($_REQUEST, $privateKey);
 }
 
+// Display response
 if(!empty($response)) {
     if($response->getResult() == RESTConstants::$RESP_LITERAL_OK) {
         echo("<h1 style='color: green'>Payment has been successfully submitted!</h1>");
