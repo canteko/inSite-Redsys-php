@@ -1,0 +1,62 @@
+/*--------------------
+Shared Variables
+--------------------*/
+/*--------------------
+General
+--------------------*/
+.form-container td, th {
+	padding: 0px !important;
+	text-align: left;
+}
+
+.form-container {
+	display: -webkit-box;
+	display: -ms-flexbox;
+	display: flex;
+	-webkit-box-pack: center;
+	-ms-flex-pack: center;
+	justify-content: center;
+	-webkit-box-align: center;
+	-ms-flex-align: center;
+	align-items: center;
+	height: 80%;
+	max-height: 375px;
+	-webkit-box-orient: vertical;
+	-webkit-box-direction: normal;
+	-ms-flex-direction: column;
+	flex-direction: column;
+	box-sizing: border-box;
+	margin-bottom: 0em;
+}
+
+#redsys-form-err span{
+    max-width: 225px;
+}
+
+#guardar-tarj {
+	font-size: 14px;
+	display: block;
+	margin: 0 auto;
+}
+
+/*--------------------
+Inputs 
+--------------------*/
+.input-wrapper {
+	border-radius: 2px;
+	height: 2.75em;
+}
+
+.cardinfo-exp-date {
+	width: 50px;
+	float: left;
+}
+
+.cardinfo-exp-date2 {
+	width: 50px;
+	float: left;
+}
+
+.cardinfo-merchant-data {
+	max-height: 70px;
+}
