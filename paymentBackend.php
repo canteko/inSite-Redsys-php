@@ -1,12 +1,16 @@
 <?php
 
 include_once 'ApiRedsysREST/initRedsysApi.php';
+include_once 'Config.php';
 
-function main($request, $privateKey)
+function main($request)
 {
     // Settings variables received on request
     // Environment
     $environment = (!empty($request['env']) ? $request['env'] : RESTConstants::$ENV_SANDBOX);
+
+    // privateKey has to be obtained from your system and not directly written into code, this is just an example coded to be functional out of the box
+    $privateKey = ($environment == RESTConstants::$ENV_SANDBOX ? Config::$PRIVATEKEY_SANDBOX : Config::$PRIVATEKEY_PROD);
 
     // idOper
     $idOper = (!empty($request['idOper']) ? $request['idOper'] : "");
@@ -236,7 +240,7 @@ function challenge($protocolVersion, $acsURL, $md, $pareq, $challengeResponseUrl
 /**
  * Method to receive the challenge response
  */
-function challengeResponse($request, $privateKey)
+function challengeResponse($request)
 {
     // Operation mandatory data
     $challengeRequest = new RestAuthenticationRequestMessage();
@@ -246,6 +250,9 @@ function challengeResponse($request, $privateKey)
 
     // Environment
     $environment = (!empty($request['env']) ? $request['env'] : RESTConstants::$ENV_SANDBOX);
+
+    // privateKey has to be obtained from your system and not directly written into code, this is just an example coded to be functional out of the box
+    $privateKey = ($environment == RESTConstants::$ENV_SANDBOX ? Config::$PRIVATEKEY_SANDBOX : Config::$PRIVATEKEY_PROD);
 
     // ProtocolVersion
     $protocolVersion = (!empty($request['protocolVersion']) ? $request['protocolVersion'] : "1.0.2");
@@ -297,17 +304,24 @@ function challengeResponse($request, $privateKey)
     return $response;
 }
 
+if(empty($_REQUEST)) {
+    // Getting host URL
+    $baseUrl = 'http' . (isset($_SERVER['HTTPS']) ? 's' : '') . '://' . $_SERVER['HTTP_HOST'];
+    $currentUrl = $baseUrl . $_SERVER['REQUEST_URI'];
+    preg_match("/^(.*)\/.*php$/", $currentUrl, $matches);
+    $frontUrl = (count($matches) < 2 ? $baseUrl : $matches[1]) . "/paymentFrontend.php";
+    header("Location: $frontUrl", true, 301);
+    exit();
+}
+
 // Type of flow to follow
 $type = (empty($_REQUEST['type']) ? "init" : $_REQUEST['type']);
 
-// privateKey has to be obtained from your system and not directly written into code, this is just an example coded to be functional out of the box
-$privateKey = "sq7HjrUOBfKmC576ILgskD5srU870gJ7";
-
 // Check request type
 if($type == "init") {
-    $response = main($_REQUEST, $privateKey);
+    $response = main($_REQUEST);
 } else if ($type == "challengeResponse"){
-    $response = challengeResponse($_REQUEST, $privateKey);
+    $response = challengeResponse($_REQUEST);
 }
 
 // Display response
