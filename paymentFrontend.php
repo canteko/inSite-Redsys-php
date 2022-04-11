@@ -1,14 +1,12 @@
 <?php
 include_once 'ApiRedsysREST/initRedsysApi.php';
-include_once 'Config.php';
 
 // Environment
 $env = RESTConstants::$ENV_SANDBOX;
-// $env = RESTConstants::$ENV_PRODUCTION;
 
 // merchantId and terminal have to be obtained from your system and not directly written into code, this is just an example coded to be functional out of the box
-$merchantId = Config::$FUC;
-$terminal = Config::$TERMINAL;
+$merchantId = "999008881";
+$terminal = "20";
 
 // orderId has to be obtained according to the merchant's criteria, this is just an example
 $orderId = time();
