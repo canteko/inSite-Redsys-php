@@ -94,13 +94,13 @@ if (!class_exists('RESTOperationService')) {
 								$transType = $response->getTransactionType();
 								switch ((int)$response->getOperation()->getResponseCode()) {
 									case RESTConstants::$AUTHORIZATION_OK:
-										$response->setResult(($transType == RESTConstants::$AUTHORIZATION || $transType == RESTConstants::$PREAUTHORIZATION) ? RESTConstants::$RESP_LITERAL_OK : RESTConstants::$RESP_LITERAL_KO);
+										$response->setResult(in_array($transType, [RESTConstants::$AUTHORIZATION,RESTConstants::$PREAUTHORIZATION, RESTConstants::$VALIDATION]) ? RESTConstants::$RESP_LITERAL_OK : RESTConstants::$RESP_LITERAL_KO);
 										break;
 									case RESTConstants::$CONFIRMATION_OK:
-										$response->setResult(($transType == RESTConstants::$CONFIRMATION || $transType == RESTConstants::$REFUND) ? RESTConstants::$RESP_LITERAL_OK : RESTConstants::$RESP_LITERAL_KO);
+										$response->setResult(in_array($transType, [RESTConstants::$CONFIRMATION, RESTConstants::$REFUND, RESTConstants::$VALIDATION_CONFIRMATION]) ? RESTConstants::$RESP_LITERAL_OK : RESTConstants::$RESP_LITERAL_KO);
 										break;
 									case RESTConstants::$CANCELLATION_OK:
-										$response->setResult($transType == RESTConstants::$CANCELLATION ? RESTConstants::$RESP_LITERAL_OK : RESTConstants::$RESP_LITERAL_KO);
+										$response->setResult(in_array($transType, [RESTConstants::$CANCELLATION]) ? RESTConstants::$RESP_LITERAL_OK : RESTConstants::$RESP_LITERAL_KO);
 										break;
 									default:
 										$response->setResult(RESTConstants::$RESP_LITERAL_KO);
