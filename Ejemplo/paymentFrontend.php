@@ -105,6 +105,7 @@ $orderId = time();
             flex-wrap: wrap;
             display: flex;
             align-items: flex-start;
+            justify-content: center;
         }
 
         .header {
