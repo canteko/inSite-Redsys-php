@@ -65,15 +65,15 @@ function main($request, $privateKey)
     $threeDSCompInd = 'Y';
 
     // Check if we have to do 3DSMETHOD
-    if(empty($threeDSMethodURL)){
-        $threeDSCompInd = 'N'; 
+    if (empty($threeDSMethodURL)) {
+        $threeDSCompInd = 'N';
     } else {
         // TODO We would need to do 3DSMETHOD if URL is not empty
     }
 
     // BrowserData
     $browserData = array();
-    if($protocolVersion != RESTConstants::$REQUEST_MERCHANT_EMV3DS_PROTOCOLVERSION_102) {
+    if ($protocolVersion != RESTConstants::$REQUEST_MERCHANT_EMV3DS_PROTOCOLVERSION_102) {
         $browserData['javaEnabled'] = (!empty($request['javaEnabled']) ? $request['javaEnabled'] : "false");
         $browserData['javascriptEnabled'] = (!empty($request['javascriptEnabled']) ? $request['javascriptEnabled'] : "false");
         $browserData['browserLanguage'] = (!empty($request['browserLanguage']) ? $request['browserLanguage'] : "");
@@ -108,7 +108,6 @@ function main($request, $privateKey)
         }
         // We print our challenge
         echo (challenge($protocolVersion, $acsURL, $md, $pareq, $challengeResponseUrl, $creq));
-
     }
 
     return $toResponse;
@@ -169,7 +168,7 @@ function authenticationOperation($privateKey, $order, $amount, $currency, $merch
         $browserUserAgent = $_SERVER["HTTP_USER_AGENT"];
 
         // Browser data obtained with JS
-        if(!empty($browserData)) {
+        if (!empty($browserData)) {
             $browserJavaEnable = $browserData['javaEnabled'];
             $browserJavaScriptEnabled = $browserData['javascriptEnabled'];
             $browserLanguage = $browserData['browserLanguage'];
@@ -194,7 +193,7 @@ function authenticationOperation($privateKey, $order, $amount, $currency, $merch
         // Response analysis
     } catch (Exception $e) {
         // Error treatment
-        echo($e->getMessage());
+        echo ($e->getMessage());
     }
 
     // Return response
@@ -211,7 +210,7 @@ function challenge($protocolVersion, $acsURL, $md, $pareq, $challengeResponseUrl
     $challenge = "<iframe id='challengeIframe' name='challengeIframe' src='' target='_parent' referrerpolicy='origin'
 					sandbox='allow-same-origin allow-scripts allow-top-navigation allow-forms'
 					height='95%' width='100%' style='border: none; display: inline;'></iframe>"
-                . "<form id='challengeForm' action='$acsURL' class='round-border' style='display: none' method='POST' enctype='application/x-www-form-urlencoded' target='challengeIframe'>";
+        . "<form id='challengeForm' action='$acsURL' class='round-border' style='display: none' method='POST' enctype='application/x-www-form-urlencoded' target='challengeIframe'>";
 
     // Adding parameters we need to save send depending on the protocolVersion
     if ($protocolVersion == RESTConstants::$REQUEST_MERCHANT_EMV3DS_PROTOCOLVERSION_102) {
@@ -290,7 +289,7 @@ function challengeResponse($request, $privateKey)
         // Response analysis
     } catch (Exception $e) {
         // Error treatment
-        echo($e->getMessage());
+        echo ($e->getMessage());
     }
 
     // Return response
@@ -304,21 +303,21 @@ $type = (empty($_REQUEST['type']) ? "init" : $_REQUEST['type']);
 $privateKey = "sq7HjrUOBfKmC576ILgskD5srU870gJ7";
 
 // Check request type
-if($type == "init") {
+if ($type == "init") {
     $response = main($_REQUEST, $privateKey);
-} else if ($type == "challengeResponse"){
+} else if ($type == "challengeResponse") {
     $response = challengeResponse($_REQUEST, $privateKey);
 }
 
 // Display response
-if(!empty($response)) {
-    if($response->getResult() == RESTConstants::$RESP_LITERAL_OK) {
-        echo("<h1 style='color: green'>Payment has been successfully submitted!</h1>");
-        echo("<a href='paymentFrontend.php' target='_parent'>Go Back!</a>");
-    } else if($response->getResult() == RESTConstants::$RESP_LITERAL_AUT) {
-        echo("<h1 style='color: orange'>Authentication needed!</h1>");
-        echo("<a href='paymentFrontend.php' target='_parent'>Go Back!</a>");
-    } else if($response->getResult() == RESTConstants::$RESP_LITERAL_KO) {
-        echo("<h1 style='color: red'>An error has occurred!</h1>");
+if (!empty($response)) {
+    if ($response->getResult() == RESTConstants::$RESP_LITERAL_OK) {
+        echo ("<h1 style='color: green'>Payment has been successfully submitted!</h1>");
+        echo ("<a href='paymentFrontend.php' target='_parent'>Go Back!</a>");
+    } else if ($response->getResult() == RESTConstants::$RESP_LITERAL_AUT) {
+        echo ("<h1 style='color: orange'>Authentication needed!</h1>");
+        echo ("<a href='paymentFrontend.php' target='_parent'>Go Back!</a>");
+    } else if ($response->getResult() == RESTConstants::$RESP_LITERAL_KO) {
+        echo ("<h1 style='color: red'>An error has occurred!</h1>");
     }
 }
