@@ -1,5 +1,5 @@
 <?php
-include_once 'ApiRedsysREST/initRedsysApi.php';
+include_once '../ApiRedsysREST/initRedsysApi.php';
 include_once 'Config.php';
 
 // Environment

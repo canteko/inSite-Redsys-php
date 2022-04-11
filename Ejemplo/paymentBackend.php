@@ -1,6 +1,6 @@
 <?php
 
-include_once 'ApiRedsysREST/initRedsysApi.php';
+include_once '../ApiRedsysREST/initRedsysApi.php';
 include_once 'Config.php';
 
 function main($request)
