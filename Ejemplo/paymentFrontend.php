@@ -15,7 +15,6 @@ $orderId = time();
 ?>
 
 <html>
-
 <head>
     <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.min.css">
     <script src="lib/jquery/js/jquery-3.4.1.js"></script>
@@ -170,7 +169,6 @@ $orderId = time();
         <div class="example-card-wrapper flex-center-column" data-pan="4918010000000044" data-date="3412" data-cvv2="123" data-description="Card that emulates an authentication using EMV3DS 2.1, but produces an error in the middle of the transaction due to merchant not being  enrolled correctly and performs a fallback to complete the flow using V1"></div>
     </div>
 
-
     <script>
         var submitted = false;
         var token = "-1";
@@ -247,5 +245,4 @@ $orderId = time();
         });
     </script>
 </body>
-
 </html>
