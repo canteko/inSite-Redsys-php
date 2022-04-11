@@ -57,9 +57,9 @@ if(!class_exists('RESTDCCConfirmationService')){
 				}
 				else{
 					switch ((int)$response->getOperation()->getResponseCode()){
-						case RESTConstants::$AUTHORIZATION_OK: $response->setResult(in_array($transType, [RESTConstants::$AUTHORIZATION, RESTConstants::$PREAUTHORIZATION, RESTConstants::$VALIDATION])); break;
-						case RESTConstants::$CONFIRMATION_OK: $response->setResult(in_array($transType, [RESTConstants::$CONFIRMATION, RESTConstants::$REFUND, RESTConstants::$VALIDATION_CONFIRMATION])); break;
-						case RESTConstants::$CANCELLATION_OK: $response->setResult(in_array($transType, [RESTConstants::$CANCELLATION])); break;
+						case RESTConstants::$AUTHORIZATION_OK: $response->setResult($transType==RESTConstants::$AUTHORIZATION || $transType==RESTConstants::$PREAUTHORIZATION); break;
+						case RESTConstants::$CONFIRMATION_OK: $response->setResult($transType==RESTConstants::$CONFIRMATION || $transType==RESTConstants::$REFUND); break;
+						case RESTConstants::$CANCELLATION_OK: $response->setResult($transType==RESTConstants::$CANCELLATION); break;
 						default: $response->setResult(RESTConstants::$RESP_LITERAL_KO);
 					}
 				}
